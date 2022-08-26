@@ -1,0 +1,35 @@
+# This is the prerequsite schema required
+# for fedaration by the gateway
+directive @boundary on OBJECT | FIELD_DEFINITION
+
+# The Service type provides the gateway a schema
+# to merge into the graph and a name/version to
+# reference the service with
+type Service {
+  name: String!
+  version: String!
+  schema: String!
+}
+
+type Query {
+  # The service query is used by the gateway when
+  # the service is first registered
+  service: Service!
+
+  # the schema representing a resource
+  getResource(id: ID!): Resource @boundary
+  makeResource(aclstr: String!, aclnum: Int!, body: String!): Boolean
+}
+
+type Resource @boundary {
+  # required by all services that add a field to
+  # the Foo type
+  id: ID!
+
+  aclstr: String! #the user:group that owns this resource
+  aclnum: Int! #three digit unix numeric ACL
+  createdDate: String! #all three of these are autofilled columns(this is supported by postgres, they just need proper annotation)
+  updatedDate: String #TODO: autogen these
+  deletedDate: String #this is for soft deletes, we want to keep resources that are deleted for 4 months, just in case
+  body: String! #field that contains all relevant data as a string
+}

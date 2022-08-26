@@ -1,0 +1,126 @@
+version: '3.8'
+services:
+  gql-gateway:
+    container_name: ${GQL_GATEWAY_IMAGE_NAME}
+    hostname: gateway-host
+    build:
+      context: .
+      dockerfile: ./gateway.Dockerfile
+    restart: "always"
+    ports:
+      - 8082
+      - 8083
+      - 9009
+    volumes:
+      - ./config.json:/config.json
+    environment:
+      BRAMBLE_SERVICE_LIST: "http://users-host:${GQL_SCHEMA_SWARM_PORT}/query http://resources-host:${GQL_SCHEMA_SWARM_PORT}/query"
+    networks:
+      - nodeapp-network
+    depends_on:
+      gql-users:
+          condition: service_healthy
+      gql-resources:
+          condition: service_healthy
+
+  gql-users:
+    container_name: ${GQL_USERS_IMAGE_NAME}
+    hostname: users-host
+    restart: always
+    build:
+      context: .
+      dockerfile: ./users-service/Dockerfile
+    expose:
+      - ${GQL_SCHEMA_SWARM_PORT}
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 1s
+      retries: 5
+    environment:
+      PORT: 8080
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_NAME}
+      REDIS_PORT: ${REDIS_PORT}
+      SALT_ROUNDS: ${SALT_ROUNDS}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: ${NODE_ENV}
+      GQL_SCHEMA_SWARM_PORT: ${GQL_SCHEMA_SWARM_PORT}
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nodeapp-network
+      
+  gql-resources:
+    container_name: ${GQL_RESOURCES_IMAGE_NAME}
+    hostname: resources-host
+    restart: always
+    build:
+      context: .
+      dockerfile: ./resources-service/Dockerfile
+    expose:
+      - ${GQL_SCHEMA_SWARM_PORT}
+    healthcheck:
+      test: curl --fail http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 1s
+      retries: 5
+    environment:
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_NAME}
+      REDIS_PORT: ${REDIS_PORT}
+      SALT_ROUNDS: ${SALT_ROUNDS}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: ${NODE_ENV}
+      GQL_SCHEMA_SWARM_PORT: ${GQL_SCHEMA_SWARM_PORT}
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nodeapp-network
+
+  redis:
+      image: redis:alpine
+      restart: "always"
+      container_name: ${REDIS_NAME}
+      ports:
+        - "${REDIS_PORT}:6379"
+      networks:
+        - nodeapp-network
+
+  postgres:
+    container_name: ${POSTGRES_NAME}
+    image: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "${POSTGRES_PORT}:5432" #TODO: why is the postgres port visible outside of dockernet
+    networks:
+      - nodeapp-network
+    restart: unless-stopped
+
+volumes:
+  postgres:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  nodeapp-network: 
+    driver: bridge
+

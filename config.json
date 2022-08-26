@@ -1,0 +1,26 @@
+{
+  "name": "neb-backend",
+  "services": [
+    "http://users-host:8080/query",
+    "http://resources-host:8080/query"
+  ],
+  "config": {
+    "gateway-port": 4000,
+    "max-response-time": "10s",
+    "max-request-bytes": 1000000,
+    "public-keys": {
+      "my-kid": "MIICCgKCAgEAzjjOH9EyAztK1JRBQxbs8NGS8JRiQXN/YKi1NKbSwp4L2nkmspJa46VZqplT7jZPVsa+n+/su1rOED4HvrXY/suql7gTQ3Lpz5fx559xvpUWQ4Wkn25utpVMX+gMsbfr1+eqRTn3J8OngOFlhuB9F+WJZ+/hItEw4uoSV7JbhI0D7Dx/X8J9Oi39rHyciqiYIs5sF9QgcfrFW8+zyJVyOi8jsNKF10nP+7/a+2tsPm7q9i3efgpZ+0uc7h/+R/BJAl4L/dF1DCZKQsA3yAliVSqKtImCFXGW3zEWxPrEdmkcDXPDb0KNMlBGMWVZKdbYC4go6NelWT1aDxXR9VV2hUec3hmaM5mnZBMbI2js1BgjozXsObBoPAtadflweczNj72GL5VeiFnFMjsqqixlg4pLYzb7K6TkLm7r269z0bfTf1Pg9tYVq48uvFm2xVjf1cr33tC6l9KPq1dG/VhW8NqYHNGvk5Xa+JN2PQRt3ttCh4EoiIWlPWAWcRouYdYRO6+F2poK1mTWO/bu1V06gZQHb9JCUr7wJYZQce8Bxv+0Dgr65oIqxYZeQMvnwhAPg0ZfVW4IRFfgEmpts694q/4BjxRuezRARdEAxSkVxuvxWX/nLAvMZv/ecGxQJ/q4zNOq4/qLgFwdd191BcRbbN8b8aYKKN6owLGIqJQdAXsCAwEAAQ=="
+    },
+    "roles": {
+      "public_role": {
+        "mutation": {
+          "auth": ["login"]
+        }
+      },
+      "internal": {
+        "query": "*",
+        "mutation": "*"
+      }
+    }
+  }
+}
